@@ -47,7 +47,7 @@ class Config(object):
     UPDATES_CHANNEL = os.environ.get("UPDATES_CHANNEL", "-1003585312144")
 
     TG_MIN_FILE_SIZE = 2194304000
-    BOT_USERNAME = os.environ.get("BOT_USERNAME", "Universal_url_downloader_bot")
+    BOT_USERNAME = os.environ.get("BOT_USERNAME", "uploadLinkToFileBot")
     ADL_BOT_RQ = {}
 
     # Set False off else True
