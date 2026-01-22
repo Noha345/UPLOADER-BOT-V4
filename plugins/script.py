@@ -1,5 +1,12 @@
+import os
+import re
+from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from plugins.config import Config
 
+# ------------------------------------------------------------------
+#  YOUR TRANSLATION CLASS
+# ------------------------------------------------------------------
 class Translation(object):
 
     START_TEXT = """
@@ -46,7 +53,6 @@ Usᴇ ʜᴇʟᴘ ʙᴜᴛᴛᴏɴ ᴛᴏ ᴋɴᴏᴡ ʜᴏᴡ ᴛᴏ ᴜsᴇ ᴍ
 ┣ 🕒 Tɪᴍᴇ : {4}
 ┗━━━━━━━━━━━━━━━━━━━━
 """
-    # Fixed typo from PROGRES to PROGRESS_BAR if needed, but keeping as is for compatibility
     PROGRES = """
 `{}`\n{}"""
 
@@ -137,3 +143,105 @@ Usᴇ ʜᴇʟᴘ ʙᴜᴛᴛᴏɴ ᴛᴏ ᴋɴᴏᴡ ʜᴏᴡ ᴛᴏ ᴜsᴇ ᴍ
     ADD_CAPTION_HELP = """Select an uploaded file/video or forward me <b>Any Telegram File</b> and just write the text you want to be on the file <b>as a reply to the file</b> and the text you wrote will be attached as the caption! 🤩
     
 Example: <a href="https://te.legra.ph/file/ecf5297246c5fb574d1a0.jpg">See This!</a> 👇"""
+
+
+# ------------------------------------------------------------------
+#  HELPER: EXTRACT URL
+# ------------------------------------------------------------------
+def clean_url(text):
+    # Regex to find http/https links
+    url_pattern = re.compile(r'https?://\S+')
+    match = url_pattern.search(text)
+    if match:
+        return match.group(0)
+    return None
+
+# ------------------------------------------------------------------
+#  MAIN LOGIC (Universal Downloader)
+# ------------------------------------------------------------------
+
+@Client.on_message(filters.private & (filters.regex(pattern=".*http.*") | filters.regex(pattern=".*magnet.*")))
+async def echo(bot, update):
+    
+    # 0. IGNORE "Processing" messages (Prevents the Loop Error)
+    if "Processing..." in update.text:
+        return
+
+    # 1. Parsing the URL and Filename
+    raw_text = update.text.strip()
+    custom_file_name = None
+    youtube_dl_username = None
+    youtube_dl_password = None
+
+    # Handle "|" separator for custom filenames
+    if "|" in raw_text:
+        parts = raw_text.split("|")
+        raw_text = parts[0].strip()
+        custom_file_name = parts[1].strip()
+        if len(parts) > 2:
+            youtube_dl_username = parts[2].strip()
+            youtube_dl_password = parts[3].strip()
+
+    # Clean the URL (Remove surrounding text/newlines)
+    url = clean_url(raw_text)
+    if not url:
+        return await update.reply_text("⚠️ Could not find a valid URL in that message.")
+
+    # 2. Setup the Command (Universal Logic)
+    # ---------------------------------------------------------------------------------
+    #  🚀 UNIVERSAL DOWNLOADER CONFIGURATION
+    #  Mimics a Chrome Extension to find video on ANY website.
+    # ---------------------------------------------------------------------------------
+    
+    command_to_exec = [
+        "yt-dlp",
+        
+        # 1. Output Format (JSON for the bot to read)
+        "-j",
+        
+        # 2. General Settings
+        "--no-warnings",
+        "--allow-dynamic-mpd",
+        "--no-check-certificate",  # Fixes SSL errors on smaller/older sites
+        "--ignore-errors",         # Keeps going even if one segment fails
+        
+        # 3. 🎭 ULTIMATE STEALTH MODE (Fakes a real PC Browser)
+        # This user agent mimics Chrome 120 on Windows 10 perfectly.
+        "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "--referer", "https://www.google.com/",  # Pretend we came from Google
+        
+        # 4. 🌍 Geo-Restriction Bypass
+        "--geo-bypass",
+        "--geo-bypass-country", "US", # Pretend to be in US if blocked
+        
+        # 5. 🧠 INTELLIGENT EXTRACTION (The "Extension" Logic)
+        # If the specific site extractor fails, this forces the 'generic' extractor 
+        # to scan the page for embedded video players (jwplayer, video.js, etc).
+        "--extractor-args", "generic:impersonate", 
+
+        # 6. The Target URL
+        url
+    ]
+
+    # Add Proxy if you have one
+    if Config.HTTP_PROXY != "":
+        command_to_exec.extend(["--proxy", Config.HTTP_PROXY])
+
+    # Add Credentials if the user provided them
+    if youtube_dl_username is not None:
+        command_to_exec.extend(["--username", youtube_dl_username])
+    if youtube_dl_password is not None:
+        command_to_exec.extend(["--password", youtube_dl_password])
+
+    # 3. Send Processing Message
+    msg = await update.reply_text(f"Processing... 🔎\n<code>{url}</code>", disable_web_page_preview=True)
+    
+    # 4. EXECUTE DOWNLOAD
+    # Tries to call the main download function from your bot's folder structure
+    try:
+        from plugins.functions.help_uploadbot import DownLoadFile
+        await DownLoadFile(url, update, msg, custom_file_name, command_to_exec)
+    except ImportError:
+        await msg.edit("❌ **Error:** Could not find `DownLoadFile` function.\nMake sure your `plugins/functions/` folder is correct.")
+    except Exception as e:
+        await msg.edit(f"❌ **Critical Error:** {str(e)}")
