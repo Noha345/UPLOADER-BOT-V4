@@ -1,15 +1,13 @@
-# ©️ LISA-KOREA | @LISA_FAN_LK | NT_BOT_CHANNEL | LISA-KOREA/UnZip-Bot
+# [⚠️ Do not change this repo link ⚠️] :- https://github.com/Noha345/UPLOADER-BOT-V4
 
-# [⚠️ Do not change this repo link ⚠️] :- https://github.com/LISA-KOREA/UPLOADER-BOT-V4
+# My Telegram Channel :- @MyAnimeEnglish
 
-# My Telegram Channel :- @NT_BOT_CHANNEL
+# Support Group :- @MyAnimeEnglishUpdates
 
-# Support Group :- @NT_BOTS_SUPPORT
+# My Youtube Channel :- https://
 
-# My Youtube Channel :- https://youtube.com/@ntbot?si=TJaNuy4e1HqWirqQ
-
-# Developers Usernames :- @JOBIN_JUSTIN , @LISA_FAN_LK
+# Developers Usernames :- @Haaiooo, @Businessdealsonly
 
 # (C) Don’t Change And Edit This File ✍️ | Warning ⚠️
 
-# ©️ 2022 - 2026
+# ©️ 2026 - 2029
