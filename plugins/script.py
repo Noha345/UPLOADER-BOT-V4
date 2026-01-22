@@ -78,9 +78,8 @@ async def echo(bot, update):
         return await update.reply_text("⚠️ Could not find a valid URL.")
 
     # -----------------------------------------------------------------
-    # 🌐 RAW FILE MODE: Download Source directly (HTML, M3U8, TXT, JSON)
+    # 🌐 RAW FILE MODE: Download Source directly
     # -----------------------------------------------------------------
-    # Added .m3u8, .txt, and .json to the allowed list for direct download
     if custom_file_name and custom_file_name.lower().endswith(('.html', '.htm', '.m3u8', '.txt', '.json')):
         msg = await update.reply_text(f"🌐 **Downloading Raw File...**\n<code>{url}</code>", disable_web_page_preview=True)
         try:
@@ -130,6 +129,7 @@ async def echo(bot, update):
     
     try:
         from plugins.functions.help_uploadbot import DownLoadFile
-        await DownLoadFile(url, update, msg, custom_file_name, command_to_exec)
+        # ⚠️ FIXED LINE BELOW: Added update.id (message_id) and update.chat.id (chat_id)
+        await DownLoadFile(url, update, msg, custom_file_name, command_to_exec, update.id, update.chat.id)
     except Exception as e:
         await msg.edit(Translation.NO_VOID_FORMAT_FOUND.format(str(e)))
