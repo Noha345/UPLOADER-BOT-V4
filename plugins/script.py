@@ -1,5 +1,16 @@
+import os
+import time
+import math
+import json
+import logging
+import asyncio
+from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from plugins.config import Config
 
+# ------------------------------------------------------------------
+#  YOUR TRANSLATION CLASS (Text & Buttons)
+# ------------------------------------------------------------------
 class Translation(object):
 
     START_TEXT = """
@@ -46,22 +57,8 @@ Usᴇ ʜᴇʟᴘ ʙᴜᴛᴛᴏɴ ᴛᴏ ᴋɴᴏᴡ ʜᴏᴡ ᴛᴏ ᴜsᴇ ᴍ
 ┣ 🕒 Tɪᴍᴇ : {4}
 ┗━━━━━━━━━━━━━━━━━━━━
 """
-    # Fixed typo from PROGRES to PROGRESS_BAR if needed, but keeping as is for compatibility
     PROGRES = """
 `{}`\n{}"""
-
-    INFO_TEXT = """
-╭──────────────〄
-├📛 **Fɪʀsᴛ Nᴀᴍᴇ :** <b>{}</b>
-├📛 **Sᴇᴄᴏɴᴅ Nᴀᴍᴇ :** <b>{}</b>
-├👤 **Usᴇʀɴᴀᴍᴇ :** <b>@{}</b>
-├🆔 **Tᴇʟᴇɢʀᴀᴍ ⵊᴅ :** <code>{}</code>
-├🖇️ **Pʀᴏꜰɪʟᴇ Lɪɴᴋ :** <b>{}</b>
-├📡 **Dᴄ :** <b>{}</b>
-├💮 **Lᴀɴɢᴜᴀɢᴇ:** <b>{}</b>
-├💫 **Sᴛᴀᴛᴜs :** <b>{}</b>
-╰──────────────────〄
-"""
 
     START_BUTTONS = InlineKeyboardMarkup(
         [[
@@ -88,17 +85,6 @@ Usᴇ ʜᴇʟᴘ ʙᴜᴛᴛᴏɴ ᴛᴏ ᴋɴᴏᴡ ʜᴏᴡ ᴛᴏ ᴜsᴇ ᴍ
     ABOUT_BUTTONS = InlineKeyboardMarkup(
         [[
             InlineKeyboardButton('🛠️ SETTINGS', callback_data='OpenSettings')
-        ],[
-            InlineKeyboardButton('🔙 BACK', callback_data='home'),
-            InlineKeyboardButton('🤝 HELP', callback_data='help')
-        ],[
-            InlineKeyboardButton('⛔ CLOSE', callback_data='close')
-        ]]
-    )
-
-    PLANS_BUTTONS = InlineKeyboardMarkup(
-        [[
-            InlineKeyboardButton('🎯 ABOUT', callback_data='about')
         ],[
             InlineKeyboardButton('🔙 BACK', callback_data='home'),
             InlineKeyboardButton('🤝 HELP', callback_data='help')
@@ -134,6 +120,12 @@ Usᴇ ʜᴇʟᴘ ʙᴜᴛᴛᴏɴ ᴛᴏ ᴋɴᴏᴡ ʜᴏᴡ ᴛᴏ ᴜsᴇ ᴍ
     NO_VOID_FORMAT_FOUND = "ERROR... <code>{}</code>"
     FILE_NOT_FOUND = "Error, File not Found!!"
     FF_MPEG_RO_BOT_AD_VER_TISE_MENT = "Join : @MyAnimeEnglish \n For the list of Telegram bots. "
-    ADD_CAPTION_HELP = """Select an uploaded file/video or forward me <b>Any Telegram File</b> and just write the text you want to be on the file <b>as a reply to the file</b> and the text you wrote will be attached as the caption! 🤩
-    
-Example: <a href="https://te.legra.ph/file/ecf5297246c5fb574d1a0.jpg">See This!</a> 👇"""
+    ADD_CAPTION_HELP = """Select an uploaded file/video or forward me <b>Any Telegram File</b> and just write the text you want to be on the file <b>as a reply to the file</b> and the text you wrote will be attached as the caption! 🤩"""
+
+
+# ------------------------------------------------------------------
+#  MAIN LOGIC (Universal Downloader)
+# ------------------------------------------------------------------
+
+@Client.on_message(filters.private & (filters.regex(pattern=".*http.*") | filters.regex(pattern=".*magnet.*")))
+async
