@@ -14,13 +14,11 @@ class Translation(object):
     HELP_TEXT = "**Hᴏᴡ Tᴏ Usᴇ Tʜɪs Bᴏᴛ** 🤔\n\n𖣔 Sᴇɴᴅ ᴜʀʟ | Nᴇᴡ ɴᴀᴍᴇ.ᴍᴋᴠ\n𖣔 To download a page/playlist as file: `URL | file.m3u8` or `URL | page.html`"
     ABOUT_TEXT = "URL Uploader Bot V4"
     
-    # --- Buttons ---
     START_BUTTONS = InlineKeyboardMarkup([[InlineKeyboardButton('🛠️ SETTINGS', callback_data='OpenSettings')], [InlineKeyboardButton('⛔ CLOSE', callback_data='close')]])
     HELP_BUTTONS = InlineKeyboardMarkup([[InlineKeyboardButton('⛔ CLOSE', callback_data='close')]])
     ABOUT_BUTTONS = InlineKeyboardMarkup([[InlineKeyboardButton('⛔ CLOSE', callback_data='close')]])
     BUTTONS = InlineKeyboardMarkup([[InlineKeyboardButton('⛔ Close', callback_data='close')]])
 
-    # --- Status & Errors ---
     DOWNLOAD_START = "📥 Downloading... 📥\n\nFile Name: {}"
     UPLOAD_START = "📤 Uploading... 📤"
     AFTER_SUCCESSFUL_UPLOAD_MSG_WITH_TS = "**DONE** 🥰\n\nDownloaded in: {}s\nUploaded in: {}s"
@@ -55,7 +53,6 @@ def clean_url(text):
 @Client.on_message(filters.private & (filters.regex(pattern=".*http.*") | filters.regex(pattern=".*magnet.*")))
 async def echo(bot, update):
     
-    # 0. IGNORE "Processing" messages
     if "Processing..." in update.text:
         return
 
@@ -78,7 +75,7 @@ async def echo(bot, update):
         return await update.reply_text("⚠️ Could not find a valid URL.")
 
     # -----------------------------------------------------------------
-    # 🌐 RAW FILE MODE: Download Source directly
+    # 🌐 RAW FILE MODE
     # -----------------------------------------------------------------
     if custom_file_name and custom_file_name.lower().endswith(('.html', '.htm', '.m3u8', '.txt', '.json')):
         msg = await update.reply_text(f"🌐 **Downloading Raw File...**\n<code>{url}</code>", disable_web_page_preview=True)
@@ -90,10 +87,8 @@ async def echo(bot, update):
                         content = await resp.text()
                         async with aiofiles.open(custom_file_name, mode='w', encoding='utf-8') as f:
                             await f.write(content)
-                        
                         await msg.edit("📤 **Uploading File...**")
                         await update.reply_document(document=custom_file_name, caption=f"🔗 Source: {url}")
-                        
                         os.remove(custom_file_name)
                         await msg.delete()
                         return
@@ -105,7 +100,7 @@ async def echo(bot, update):
             return
 
     # -----------------------------------------------------------------
-    # 🎥 VIDEO MODE: Standard yt-dlp logic
+    # 🎥 VIDEO MODE
     # -----------------------------------------------------------------
     
     command_to_exec = [
@@ -129,7 +124,14 @@ async def echo(bot, update):
     
     try:
         from plugins.functions.help_uploadbot import DownLoadFile
-        # ⚠️ FIXED LINE BELOW: Added update.id (message_id) and update.chat.id (chat_id)
-        await DownLoadFile(url, update, msg, custom_file_name, command_to_exec, update.id, update.chat.id)
+        
+        # ⚠️ CRITICAL FIX BELOW: 
+        # 1. Removed 'update' (Arg 2) which was causing the Type Error.
+        # 2. Shifted 'msg' to Arg 2 (Correct).
+        # 3. Shifted 'custom_file_name' to Arg 3 (Correct).
+        # 4. Added 'None' as Arg 4 (Placeholder for Cookies/ChunkSize) to satisfy 7-argument requirement.
+        
+        await DownLoadFile(url, msg, custom_file_name, None, command_to_exec, update.id, update.chat.id)
+        
     except Exception as e:
         await msg.edit(Translation.NO_VOID_FORMAT_FOUND.format(str(e)))
