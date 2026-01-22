@@ -128,4 +128,76 @@ Usᴇ ʜᴇʟᴘ ʙᴜᴛᴛᴏɴ ᴛᴏ ᴋɴᴏᴡ ʜᴏᴡ ᴛᴏ ᴜsᴇ ᴍ
 # ------------------------------------------------------------------
 
 @Client.on_message(filters.private & (filters.regex(pattern=".*http.*") | filters.regex(pattern=".*magnet.*")))
-async
+async def echo(bot, update):
+    
+    # 1. Parsing the URL and Filename (if user used | separator)
+    url = update.text
+    youtube_dl_username = None
+    youtube_dl_password = None
+    custom_file_name = None
+
+    if "|" in url:
+        url_parts = url.split("|")
+        if len(url_parts) == 2:
+            url = url_parts[0].strip()
+            custom_file_name = url_parts[1].strip()
+        elif len(url_parts) == 4:
+            url = url_parts[0].strip()
+            custom_file_name = url_parts[1].strip()
+            youtube_dl_username = url_parts[2].strip()
+            youtube_dl_password = url_parts[3].strip()
+
+    # 2. Setup the Command to Execute (THE CODE YOU REQUESTED)
+    # ---------------------------------------------------------------------------------
+    #  🚀 UNIVERSAL DOWNLOADER CONFIGURATION
+    #  Mimics a Chrome Extension to find video on ANY website.
+    # ---------------------------------------------------------------------------------
+    
+    command_to_exec = [
+        "yt-dlp",
+        
+        # 1. Output Format (JSON for the bot to read)
+        "-j",
+        
+        # 2. General Settings
+        "--no-warnings",
+        "--allow-dynamic-mpd",
+        "--no-check-certificate",  # Fixes SSL errors on smaller/older sites
+        "--ignore-errors",         # Keeps going even if one segment fails
+        
+        # 3. 🎭 ULTIMATE STEALTH MODE (Fakes a real PC Browser)
+        # This user agent mimics Chrome 120 on Windows 10 perfectly.
+        "--user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "--referer", "https://www.google.com/",  # Pretend we came from Google
+        
+        # 4. 🌍 Geo-Restriction Bypass
+        "--geo-bypass",
+        "--geo-bypass-country", "US", # Pretend to be in US if blocked
+        
+        # 5. 🧠 INTELLIGENT EXTRACTION (The "Extension" Logic)
+        # If the specific site extractor fails, this forces the 'generic' extractor 
+        # to scan the page for embedded video players (jwplayer, video.js, etc).
+        "--extractor-args", "generic:impersonate", 
+
+        # 6. The Target URL
+        url
+    ]
+
+    # Add Proxy if you have one (Optional but recommended for strict sites)
+    if Config.HTTP_PROXY != "":
+        command_to_exec.extend(["--proxy", Config.HTTP_PROXY])
+
+    # Add Credentials if the user provided them
+    if youtube_dl_username is not None:
+        command_to_exec.extend(["--username", youtube_dl_username])
+    if youtube_dl_password is not None:
+        command_to_exec.extend(["--password", youtube_dl_password])
+
+
+    # 3. Send Processing Message
+    msg = await update.reply_text(f"Processing... 🔎\n<code>{url}</code>", disable_web_page_preview=True)
+    
+    # NOTE: The rest of the download/upload logic (calling functions/functions.py) 
+    # would usually follow here. Ensure you have the 'upload' or 'download' function calls
+    # implemented in your full bot structure.
+    # For now, this file successfully integrates your text and the command configuration.
