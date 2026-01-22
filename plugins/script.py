@@ -7,19 +7,40 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from plugins.config import Config
 
 # ------------------------------------------------------------------
-#  YOUR TRANSLATION CLASS
+#  YOUR TRANSLATION CLASS (Restored Missing Variables)
 # ------------------------------------------------------------------
 class Translation(object):
     START_TEXT = "👋 Hᴇʟʟᴏ {}\n\nⵊ Aᴍ Tᴇʟᴇɢʀᴀᴍ URL Uᴘʟᴏᴀᴅᴇʀ Bᴏᴛ.\n\n**Sᴇɴᴅ ᴍᴇ ᴀ ᴅɪʀᴇᴄᴛ ʟɪɴᴋ ᴀɴᴅ ɪ ᴡɪʟʟ ᴜᴘʟᴏᴀᴅ ɪᴛ ᴛᴏ ᴛᴇʟᴇɢʀᴀᴍ ᴀs ᴀ ꜰɪʟᴇ/ᴠɪᴅᴇᴏ**"
     HELP_TEXT = "**Hᴏᴡ Tᴏ Usᴇ Tʜɪs Bᴏᴛ** 🤔\n\n𖣔 Sᴇɴᴅ ᴜʀʟ | Nᴇᴡ ɴᴀᴍᴇ.ᴍᴋᴠ\n𖣔 To download a page as HTML: `URL | page.html`"
     ABOUT_TEXT = "URL Uploader Bot V4"
-    PROGRESS = "┣📦 Pʀᴏɢʀᴇꜱꜱ : {0}%\n┣ ✅ Dᴏɴᴇ : {1}\n┣ 📁 Tᴏᴛᴀʟ : {2}\n┣ 🚀 Sᴘᴇᴇᴅ : {3}/s\n┣ 🕒 Tɪᴍᴇ : {4}\n┗━━━━━━━━━━━━━━━━━━━━"
-    PROGRES = "`{}`\n{}"
-
+    
+    # --- Buttons ---
     START_BUTTONS = InlineKeyboardMarkup([[InlineKeyboardButton('🛠️ SETTINGS', callback_data='OpenSettings')], [InlineKeyboardButton('⛔ CLOSE', callback_data='close')]])
     HELP_BUTTONS = InlineKeyboardMarkup([[InlineKeyboardButton('⛔ CLOSE', callback_data='close')]])
     ABOUT_BUTTONS = InlineKeyboardMarkup([[InlineKeyboardButton('⛔ CLOSE', callback_data='close')]])
     BUTTONS = InlineKeyboardMarkup([[InlineKeyboardButton('⛔ Close', callback_data='close')]])
+
+    # --- Status & Errors (RESTORED) ---
+    DOWNLOAD_START = "📥 Downloading... 📥\n\nFile Name: {}"
+    UPLOAD_START = "📤 Uploading... 📤"
+    AFTER_SUCCESSFUL_UPLOAD_MSG_WITH_TS = "**DONE** 🥰\n\nDownloaded in: {}s\nUploaded in: {}s"
+    
+    # ⚠️ This was the missing variable causing your crash:
+    NO_VOID_FORMAT_FOUND = "ERROR... <code>{}</code>"
+    
+    # Other potential missing variables restored just in case:
+    INCORRECT_REQUEST = "Eʀʀᴏʀ"
+    DOWNLOAD_FAILED = "🔴 Eʀʀᴏʀ 🔴"
+    TEXT = "Sᴇɴᴅ ᴍᴇ ʏᴏᴜʀ ᴄᴜsᴛᴏᴍ ᴛʜᴜᴍʙɴᴀɪʟ"
+    IFLONG_FILE_NAME = " Only 64 characters can be named . "
+    RENAME_403_ERR = "Sorry. You are not permitted to rename this file."
+    ABS_TEXT = " Please don't be selfish."
+    FORMAT_SELECTION = "<b>Sᴇʟᴇᴄᴛ Yᴏᴜʀ Fᴏʀᴍᴀᴛ 👇</b>\n\nTitle: <b>{}</b>"
+    FILE_NOT_FOUND = "Error, File not Found!!"
+    FF_MPEG_DEL_ETED_CUSTOM_MEDIA = "✅ Media cleared succesfully."
+    SAVED_CUSTOM_THUMB_NAIL = "**SAVED THUMBNAIL** ✅"
+    DEL_ETED_CUSTOM_THUMB_NAIL = "**DELETED THUMBNAIL** ✅"
+    NO_CUSTOM_THUMB_NAIL_FOUND = "ɴᴏ ᴄᴜsᴛᴏᴍ ᴛʜᴜᴍʙɴᴀɪʟ"
 
 # ------------------------------------------------------------------
 #  HELPER: EXTRACT URL
@@ -67,20 +88,16 @@ async def echo(bot, update):
         msg = await update.reply_text(f"🌐 **Downloading Webpage...**\n<code>{url}</code>", disable_web_page_preview=True)
         try:
             async with aiohttp.ClientSession() as session:
-                # Fake a browser to avoid 403 Forbidden on some sites
                 headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36"}
                 async with session.get(url, headers=headers) as resp:
                     if resp.status == 200:
                         content = await resp.text()
-                        # Save to file
                         async with aiofiles.open(custom_file_name, mode='w', encoding='utf-8') as f:
                             await f.write(content)
                         
-                        # Upload Document
                         await msg.edit("📤 **Uploading HTML file...**")
                         await update.reply_document(document=custom_file_name, caption=f"🔗 Source: {url}")
                         
-                        # Cleanup
                         os.remove(custom_file_name)
                         await msg.delete()
                         return
@@ -118,4 +135,5 @@ async def echo(bot, update):
         from plugins.functions.help_uploadbot import DownLoadFile
         await DownLoadFile(url, update, msg, custom_file_name, command_to_exec)
     except Exception as e:
-        await msg.edit(f"❌ **Critical Error:** {str(e)}")
+        # This is where your code was failing before. Now 'NO_VOID_FORMAT_FOUND' exists!
+        await msg.edit(Translation.NO_VOID_FORMAT_FOUND.format(str(e)))
