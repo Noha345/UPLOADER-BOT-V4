@@ -1,9 +1,14 @@
-# ©️ LISA-KOREA | @LISA_FAN_LK | NT_BOT_CHANNEL | @NT_BOTS_SUPPORT | LISA-KOREA/UPLOADER-BOT-V4
-# [⚠️ Do not change this repo link ⚠️] :- https://github.com/LISA-KOREA/UPLOADER-BOT-V4
-
 import os
-from plugins.config import Config
+import logging
 from pyrogram import Client
+from plugins.config import Config
+
+# Configure logging to see errors in the console
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 if __name__ == "__main__":
 
@@ -15,24 +20,30 @@ if __name__ == "__main__":
     print("🧠  Do NOT expose your BOT_TOKEN, API_ID, API_HASH, or cookies.txt.")
     print("💡  Always use Heroku Config Vars or a private .env file to store secrets.")
     print("🔒  Never commit sensitive data to your fork — anyone can steal it!")
-    print("📢  Support: @NT_BOTS_SUPPORT")
+    print("📢  Support: @MyAnieEnglishUpdates")
     print("=" * 60 + "\n")
 
     # Ensure download folder exists
     if not os.path.isdir(Config.DOWNLOAD_LOCATION):
         os.makedirs(Config.DOWNLOAD_LOCATION)
 
-    # Start bot
+    # Load Plugins
     plugins = dict(root="plugins")
-    Client = Client(
-        "@UploaderXNTBot",
+
+    # Initialize the Bot
+    # FIXED: Changed variable name from 'Client' to 'app' to avoid conflict
+    app = Client(
+        name=Config.SESSION_NAME,  # Uses the session name from Config
         bot_token=Config.BOT_TOKEN,
         api_id=Config.API_ID,
         api_hash=Config.API_HASH,
-        upload_boost=True,
+        workers=100,               # Better concurrency
+        upload_boost=True,         # Deprecated in newer Pyrogram but kept for compatibility
         sleep_threshold=300,
         plugins=plugins
     )
 
-    print("🎊 I AM ALIVE 🎊  • Support @NT_BOTS_SUPPORT")
-    Client.run()
+    print("🎊 I AM ALIVE 🎊  • Support @MyAnimeEnglishUpdates")
+    
+    # Run the bot
+    app.run()
