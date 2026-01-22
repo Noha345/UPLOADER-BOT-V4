@@ -23,5 +23,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy the rest of the application
 COPY . .
 
-# Command to run the bot
-CMD ["python3", "bot.py"]
+# ⚠️ UPDATED COMMAND ⚠️
+# Runs the web server (gunicorn) in the background AND the bot in the foreground.
+# This keeps the container alive on Render.
+CMD ["sh", "-c", "gunicorn -b 0.0.0.0:8080 app:app & python3 bot.py"]
